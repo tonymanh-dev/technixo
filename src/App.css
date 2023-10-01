@@ -36,3 +36,13 @@
     transform: rotate(360deg);
   }
 }
+
+.main-game {
+  display: flex;
+  flex-direction: column;
+  aligh-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin-right: 16px;
+  margin-left: 16px;
+}

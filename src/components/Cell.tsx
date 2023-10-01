@@ -1,13 +1,29 @@
-import React from 'react';
-import './Cell.css';
+import React from 'react'
+import './Cell.css'
 
 interface CellProps {
-  // Your code here
+  shape: 'circle' | 'square' | 'triangle'
+  color: 'red' | 'green' | 'blue'
+  isRevealed: boolean
+  onClick: () => void
 }
 
-const Cell: React.FC<CellProps> = (props: CellProps) => {
+const Cell: React.FC<CellProps> = ({ shape, color, isRevealed, onClick }) => {
   // Render cell with shape and color, use CSS to style based on shape and color.
-  return <></>
-};
+  return (
+    <>
+      <div
+        className={`cell ${isRevealed ? 'revealed' : ''}`}
+        onClick={isRevealed ? undefined : onClick}
+      >
+        {isRevealed ? (
+          <div className={`shape ${shape} ${color}`}></div>
+        ) : (
+          'Click to reveal'
+        )}
+      </div>
+    </>
+  )
+}
 
-export default Cell;
+export default Cell
