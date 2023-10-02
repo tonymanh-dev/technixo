@@ -1,56 +1,58 @@
 import React, { useState, useEffect } from 'react'
-import { CellData, Shape, Color } from '../types'
-import Cell from './Cell'
 import './Board.css'
+import Cell from './Cell'
+import useTimer from '../hooks/timer'
+import { CellData, Shape, Color } from '../types'
 
 const Board: React.FC = () => {
-  // states...
   const [cells, setCells] = useState<CellData[]>([])
   const [selectedCells, setSelectedCells] = useState<number[]>([])
   const [attempts, setAttempts] = useState<number>(0)
 
+  const { renderTime, stopTimer } = useTimer()
+
   useEffect(() => {
     // Initialize the game board with random shapes and colors
-    initializeBoard()
+    const initBoard: CellData[] = generateRandomPairs()
+    setCells(initBoard)
   }, [])
 
-  const initializeBoard = () => {
-    const shapes: Shape[] = ['circle', 'square', 'triangle']
-    const colors: Color[] = ['red', 'green', 'blue']
+  // Define a function to generate random shape-color pairs
+  const generateRandomPairs = (): CellData[] => {
+    const pairs: CellData[] = []
 
-    const initialCells: CellData[] = []
-    const usedIds: Set<number> = new Set()
+    // Define the total number of pairs (8 pairs in this case)
+    const totalPairs = 2
 
-    for (let i = 0; i < 16; i++) {
-      // Generate pair of matching shape/color
-      // TODO: Redesign logic above
-      const randomShape = shapes[Math.floor(Math.random() * shapes.length)]
-      const randomColor = colors[Math.floor(Math.random() * colors.length)]
+    // Loop to generate pairs
+    for (let i = 0; i < totalPairs; i++) {
+      const randomShape = Object.values(Shape)[Math.floor(Math.random() * 3)]
+      const randomColor = Object.values(Color)[Math.floor(Math.random() * 3)]
 
-      let id
-      // Check duplicate id
-      do {
-        id = Math.floor(Math.random() * 16)
-      } while (usedIds.has(id))
+      // Push the randomly generated shape-color pair into the 'pairs' array
+      pairs.push({
+        shape: randomShape,
+        color: randomColor,
+        isRevealed: false,
+      })
 
-      usedIds.add(id)
-
-      initialCells.push({
-        id,
+      // Duplicate the pair to ensure each shape has a matching color
+      pairs.push({
         shape: randomShape,
         color: randomColor,
         isRevealed: false,
       })
     }
 
-    setCells(initialCells)
+    // Shuffle the 'pairs' array randomly
+    return pairs.sort(() => Math.random() - 0.5)
   }
 
   const handleCellClick = (index: number) => {
-    // Reveal cell, check for matches, update game state, and handle game completion
+    // Ensure no more than 2 cells are selected
     if (selectedCells.length < 2 && !cells[index].isRevealed) {
+      // Reveal the clicked cell
       setSelectedCells([...selectedCells, index])
-
       setCells((prevCells) =>
         prevCells.map((cell, i) =>
           i === index ? { ...cell, isRevealed: true } : cell
@@ -71,7 +73,7 @@ const Board: React.FC = () => {
         // Matched cells, keep them revealed
         setSelectedCells([])
       } else {
-        // Not a match, hide the cells after a delay
+        // Not a match, hide the cells after 1 sec
         setTimeout(() => {
           setCells((prevCells) =>
             prevCells.map((cell, i) =>
@@ -84,29 +86,40 @@ const Board: React.FC = () => {
     }
   }, [selectedCells])
 
-  console.log(cells)
-  console.log(selectedCells)
+  useEffect(() => {
+    if (Array.isArray(cells) && cells.length > 0) {
+      const allRevealed = cells.every((cell) => cell.isRevealed)
 
-  // 1. The game board consists of a 4x4 grid (total of 16 cells). => DONE
-  // 2. Each cell contains a randomly generated shape (circle, square, or triangle) in a random color (red, green, or blue). => DOING
-  // 3. The grid should have 8 pairs of matching shapes/colors. => DOING
-  // 4. When a user clicks on a cell, the shape/color is revealed. => DONE
-  // 5. The user can only reveal two cells at a time. => DONE
-  // 6. If the revealed shapes/colors match, the cells remain open. => DONE
-  // 7. If the revealed shapes/colors don't match, the cells are automatically hidden after a 1-second delay. => DONE
-  // 8. The game ends when all pairs are matched, and the user is shown a completion message with the number of attempts it took to finish the game. => DOING
+      // Show alert when all cells is revealed
+      if (allRevealed) {
+        stopTimer()
+        setTimeout(() => {
+          alert(
+            `Congratulations! You matched all pairs in ${renderTime} and ${attempts} moves. Awesome job! 🏆`
+          )
+        }, 1000)
+      }
+    }
+  }, [cells])
+
+  console.log(cells)
 
   return (
-    <div className="board">
-      {cells.map((cell, index) => (
-        <Cell
-          key={cell.id}
-          shape={cell.shape}
-          color={cell.color}
-          isRevealed={cell.isRevealed}
-          onClick={() => handleCellClick(index)}
-        />
-      ))}
+    <div>
+      <div className="time">
+        <h1>{renderTime}</h1>
+      </div>
+      <div className="board">
+        {cells.map((cell, index) => (
+          <Cell
+            key={index}
+            shape={cell.shape}
+            color={cell.color}
+            isRevealed={cell.isRevealed}
+            onClick={() => handleCellClick(index)}
+          />
+        ))}
+      </div>
     </div>
   )
 }
